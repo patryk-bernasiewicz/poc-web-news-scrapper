@@ -25,6 +25,12 @@ export default async function ProtectedLayout({
           >
             Articles
           </Link>
+          <Link
+            href="/scrapper"
+            className="font-semibold text-lg hover:underline"
+          >
+            Scrapper
+          </Link>
         </div>
         <SignOutButton />
       </nav>

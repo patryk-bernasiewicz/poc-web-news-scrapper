@@ -16,6 +16,7 @@ model articles {
   title      String
   lead       String?  @default("")
   link       String   @unique @default("")
+  slug       String   @unique
 
-  @@id([id, title])
+  @@id([id, title, slug])
 }
