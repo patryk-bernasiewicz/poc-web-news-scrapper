@@ -9,5 +9,9 @@
   "bracketSpacing": true,
   "endOfLine": "lf",
   "jsxSingleQuote": false,
-  "quoteProps": "consistent"
+  "quoteProps": "consistent",
+  "importOrder": ["^@?\\w", "^@/", "^\\."],
+  "importOrderSeparation": true,
+  "importOrderSortSpecifiers": true,
+  "plugins": ["@trivago/prettier-plugin-sort-imports"]
 }

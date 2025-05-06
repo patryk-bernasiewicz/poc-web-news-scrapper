@@ -1,5 +1,6 @@
-import prisma from '@/lib/prisma';
 import { articles } from '@prisma/client';
+
+import prisma from '@/lib/prisma';
 
 export async function fetchArticles(): Promise<articles[] | null> {
   try {

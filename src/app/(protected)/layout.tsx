@@ -1,7 +1,8 @@
-import { createClient } from '@/utils/supabase/server';
-import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
+
 import SignOutButton from '@/components/SignOutButton';
+import { createClient } from '@/utils/supabase/server';
 
 export default async function ProtectedLayout({
   children,
@@ -17,7 +18,7 @@ export default async function ProtectedLayout({
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="flex items-center justify-between px-8 py-4 border-b bg-white">
+      <nav className="flex items-center justify-between px-8 py-4 border-b bg-background-dim">
         <div className="flex items-center gap-6">
           <Link
             href="/articles"
