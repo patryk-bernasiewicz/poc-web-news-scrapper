@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { createClient } from '@/utils/supabase/client';
 
-export default function SignOutButton() {
+export function SignOutButton() {
   const router = useRouter();
   const handleSignOut = async () => {
     const supabase = createClient();

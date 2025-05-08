@@ -15,7 +15,7 @@ type NotificationPayload = {
   };
 };
 
-const NotificationsTest = () => {
+export const useNotifications = () => {
   const myChannel = client.channel('runs-notifications');
 
   function handleNotification(payload: NotificationPayload) {
@@ -39,8 +39,4 @@ const NotificationsTest = () => {
       myChannel.unsubscribe();
     };
   }, [myChannel]);
-
-  return <div>NotificationsTest</div>;
 };
-
-export default NotificationsTest;
