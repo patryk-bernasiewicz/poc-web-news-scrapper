@@ -1,10 +1,10 @@
-import { articles } from '@prisma/client';
+import { Article } from '@prisma/client';
 
 import prisma from '@/lib/prisma';
 
-export async function fetchArticles(): Promise<articles[] | null> {
+export async function fetchArticles(): Promise<Article[] | null> {
   try {
-    const articles = await prisma.articles.findMany({
+    const articles = await prisma.article.findMany({
       orderBy: {
         created_at: 'desc',
       },

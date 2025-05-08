@@ -122,4 +122,22 @@
   body {
     @apply bg-background text-foreground;
   }
+  .table {
+    @apply border border-border rounded-sm border-separate border-spacing-0;
+  }
+  .table th,
+  .table td {
+    @apply py-1 px-2 border border-border;
+  }
+  .table th:first-child,
+  .table td:first-child {
+    @apply rounded-tl-sm;
+  }
+  .table th:last-child,
+  .table td:last-child {
+    @apply rounded-tr-sm;
+  }
+  .table thead th {
+    @apply bg-muted;
+  }
 }

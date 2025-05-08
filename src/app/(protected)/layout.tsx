@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import SignOutButton from '@/components/SignOutButton';
+import SignOutButton from '@/components/auth/SignOutButton';
 import { createClient } from '@/utils/supabase/server';
 
 export default async function ProtectedLayout({

@@ -1,5 +1,8 @@
 import type { Metadata } from 'next';
 
+import { Toaster } from '@/components/ui/sonner';
+
+import NotificationsTest from './components/NotificationsTest';
 import { ThemeBody } from './components/ThemeBody';
 import './globals.css';
 
@@ -15,7 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <ThemeBody>{children}</ThemeBody>
+      <ThemeBody>
+        <NotificationsTest />
+        {children}
+        <Toaster duration={5000} />
+      </ThemeBody>
     </html>
   );
 }

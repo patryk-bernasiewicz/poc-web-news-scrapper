@@ -1,4 +1,4 @@
-import { fetchArticles } from './fetch-articles';
+import { fetchArticles } from './actions/fetch-articles';
 
 export default async function ArticlesPage() {
   const articles = await fetchArticles();
@@ -18,6 +18,7 @@ export default async function ArticlesPage() {
                 >
                   {article.title}
                 </a>
+                <div>{article.lead}</div>
               </li>
             ))
           ) : (

@@ -1,9 +1,16 @@
-import { subHours } from 'date-fns';
 import * as playwright from 'playwright';
 import slugify from 'slugify';
 
-import getCurrentRun from '@/utils/db/queries/getCurrentRun';
+import { ScrappedPageConfig } from '@/app/(protected)/scrapper/types';
+import getRunById from '@/utils/db/queries/getRunById';
 import updateRunCompleted from '@/utils/db/queries/updateRunCompleted';
+import upsertArticles, {
+  UpsertArticleDTO,
+} from '@/utils/db/queries/upsertArticles';
+
+import { createLogger } from '../utils/create-logger';
+import { isWithinLast24Hours } from './utils/is-within-24-hours';
+import { notifyRunCompleted, notifyRunCreated } from './utils/notify';
 
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
@@ -12,17 +19,7 @@ BigInt.prototype.toJSON = function () {
   return int ?? this.toString();
 };
 
-interface PageConfig {
-  url: string;
-  containerSelector: string;
-  dateSelector: string;
-  titleSelector: string;
-  leadSelector: string;
-  // Removed dateFormat
-  dateString?: string; // Optional: e.g., 'dzisiaj', 'today'
-}
-
-const pages: PageConfig[] = [
+const pages: ScrappedPageConfig[] = [
   {
     url: 'https://podatki.gazetaprawna.pl/',
     containerSelector: 'div.listItem', // Adjust if needed
@@ -50,115 +47,52 @@ const pages: PageConfig[] = [
 ];
 const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
 
-// Helper function to check if a date string indicates publication within the last 24 hours
-const isWithinLast24Hours = async (
-  dateText: string,
-  entry: PageConfig,
-): Promise<boolean> => {
-  // 1. Check for dateString match first if provided
-  if (entry.dateString) {
-    const stringMatch = dateText
-      .toLowerCase()
-      .includes(entry.dateString.toLowerCase());
-    // console.log(`Checking string "${entry.dateString}" in "${dateText}": ${stringMatch}`);
-    if (stringMatch) {
-      return true; // Found the specified string, assume recent enough
-    }
-    // If dateString is provided but doesn't match, we might want to stop here
-    // depending on desired logic. Current logic falls through to generic check.
-  }
-
-  // 2. If no dateString match (or no dateString provided), try generic parsing
-  let articleDate: Date | null = null;
-  try {
-    const genericParsed = new Date(dateText);
-    // Check if generic parsing resulted in a valid date
-    if (!isNaN(genericParsed.getTime())) {
-      articleDate = genericParsed;
-      // console.log(`Parsed generically: ${articleDate}`);
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  } catch (_e) {
-    // Ignore errors from generic parsing
-  }
-
-  // 3. Check if parsed date is within the last 24 hours
-  if (articleDate) {
-    const now = new Date();
-    const twentyFourHoursAgo = subHours(now, 24);
-    // Check if the parsed date falls within the interval [24 hours ago, now]
-    const isRecent = articleDate >= twentyFourHoursAgo && articleDate <= now;
-    // console.log(`Date ${articleDate} is recent: ${isRecent}`);
-    if (isRecent) {
-      return true; // Date is valid and within the last 24 hours
-    }
-  }
-
-  // console.log(`Date "${dateText}" did not meet criteria.`);
-  return false; // Default to false if no condition is met
-};
-
-type FoundArticle = {
-  title: string;
-  lead: string;
-  publishedDate: string; // Added publishedDate
-  confidence: number;
-  link?: string;
-  slug: string;
-};
-
-// Add the new IIFE for parallel scraping:
 (async () => {
-  // --- LOG FILE SETUP ---
-  const fs = await import('fs');
-  const now = new Date();
-  const pad = (n: number) => n.toString().padStart(2, '0');
-  const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}-${pad(now.getSeconds())}`;
-  const logFilename = `output-${dateStr}.txt`;
-  const logStream = fs.createWriteStream(logFilename, { flags: 'a' });
+  const logger = createLogger('scrap-web');
 
-  const run = await getCurrentRun();
+  const runId = BigInt(process.argv[3]);
 
-  function logToFile(...args: unknown[]) {
-    logStream.write(
-      args
-        .map((a) => (typeof a === 'string' ? a : JSON.stringify(a)))
-        .join(' ') + '\n',
-    );
+  await notifyRunCreated(runId.toString());
+
+  const run = await getRunById(runId);
+  if (!run) {
+    throw new Error('Run not found in db');
   }
+
+  // logger.info(`Przeszukuję strony: ${JSON.stringify(pages)}`);
+  // logger.info(`Poszukuję słów kluczowych: ${JSON.stringify(keywords)}`);
 
   const browser = await playwright.chromium.launch();
   // Global set to keep track of processed slugs across all parallel tasks
   const globalProcessedSlugs = new Set<string>();
 
   const scrapingPromises = pages.map(async (entry) => {
-    const siteSpecificArticles: FoundArticle[] = [];
+    const siteSpecificArticles: UpsertArticleDTO[] = [];
     const context = await browser.newContext(); // Create a new context for each site
     const page = await context.newPage(); // Create a new page for each site
     let articlesProcessed = 0; // Counter for limiting articles per site
 
     try {
-      logToFile(`\\n--- Starting scrape for ${entry.url} ---`); // Changed from console.log
+      logger.info(`\n--- Starting scrape for ${entry.url} ---`);
       // Increased timeout for page navigation and selector, and ensure DOM is loaded
       await page.goto(entry.url, {
         waitUntil: 'domcontentloaded',
         timeout: 30000,
       });
-      logToFile(`Visited ${entry.url}`); // Changed from console.log
+      logger.info(`Visited ${entry.url}`);
 
       await page.waitForSelector(entry.containerSelector, {
         timeout: 15000, // Adjusted timeout
       });
 
       const containers = await page.$$(entry.containerSelector);
-      logToFile(
-        // Changed from console.log
+      logger.info(
         `Found ${containers.length} potential article containers on ${entry.url}.`,
       );
 
       for (const container of containers) {
         if (articlesProcessed >= 10) {
-          logToFile(`Processed limit (10) reached for ${entry.url}.`); // Changed from console.log
+          logger.info(`Processed limit (10) reached for ${entry.url}.`);
           break;
         }
 
@@ -179,8 +113,7 @@ type FoundArticle = {
             link = urlObject.href;
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
           } catch (_e) {
-            logToFile(
-              // Kept as logToFile
+            logger.info(
               `Could not construct absolute URL for link: ${link} on ${entry.url}`,
             );
             link = undefined;
@@ -190,7 +123,6 @@ type FoundArticle = {
         }
 
         if (!dateElement || !titleElement) {
-          // console.log(\`Skipping container on ${entry.url}: Missing date or title element.\`);
           continue;
         }
 
@@ -207,16 +139,13 @@ type FoundArticle = {
           remove: /[*+~.()'"!:@]/g,
         });
 
-        // Avoid processing duplicates based on the global slug set
         if (globalProcessedSlugs.has(slug)) {
-          // console.log(\`Skipping duplicate article (slug already processed globally): ${titleText} on ${entry.url}\`);
           continue;
         }
 
         // --- Date Check ---
         const isRecent = isWithinLast24Hours(dateText, entry);
         if (!isRecent) {
-          // console.log(\`Skipping article (not recent) on ${entry.url}: ${titleText} | Date: ${dateText}\`);
           continue;
         }
 
@@ -227,39 +156,42 @@ type FoundArticle = {
         );
 
         if (!keywordFound) {
-          // console.log(\`Skipping article (no keywords) on ${entry.url}: ${titleText}\`);
           continue;
         }
 
         // --- Add Article ---
-        logToFile(
-          // Changed from console.log
+        logger.info(
           `MATCH FOUND on ${entry.url}: "${titleText}" (Date: ${dateText}, Link: ${link || 'N/A'}) `,
         );
-        siteSpecificArticles.push({
+
+        const article: UpsertArticleDTO = {
           title: titleText,
           lead: leadText,
-          publishedDate: dateText,
-          confidence: 0,
-          link: link || undefined,
+          link: link || '',
           slug,
-        });
+          publish_date: !isNaN(new Date(dateText).getTime())
+            ? new Date(dateText)
+            : new Date(),
+        };
+
+        siteSpecificArticles.push(article);
         globalProcessedSlugs.add(slug); // Add to global set to prevent duplicates across sites
         articlesProcessed++;
       }
-      logToFile(
-        // Changed from console.log
+      logger.info(
         `Finished processing ${entry.url}. Found ${siteSpecificArticles.length} matching articles for this site.`,
       );
       return siteSpecificArticles; // Return articles found for this specific site
     } catch (error) {
-      logToFile(`Error processing ${entry.url}:`, error); // Changed from console.error
+      logger.info(
+        `Error processing ${entry.url}: ${error instanceof Error ? error.stack || error.message : String(error)}`,
+      );
       return []; // Return an empty array if an error occurs for this site
     } finally {
       // Ensure page and context are closed for this specific task
       if (page) await page.close();
       if (context) await context.close();
-      logToFile(`--- Context closed for ${entry.url} ---`); // Changed from console.log
+      logger.info(`--- Context closed for ${entry.url} ---`);
     }
   });
 
@@ -271,40 +203,54 @@ type FoundArticle = {
 
   await browser.close(); // Close the browser instance once all tasks are done
 
-  logToFile('\\n--- Scraping Complete ---'); // Changed from console.log
-  logToFile(
-    // Changed from console.log
+  logger.info('--- Scraping Complete ---');
+  logger.info(
     `Total matching articles found across all sites: ${allFoundArticles.length}`,
   );
-  // Outputting as JSON for potential further processing
-  if (allFoundArticles.length > 0) {
-    logToFile('\\n--- Found Articles (JSON) ---'); // Changed from console.log, header for JSON to stderr
-    console.log(JSON.stringify(allFoundArticles, null, 2)); // Actual JSON data to stdout
-  } else {
-    logToFile(
-      // Informational message to stderr
-      'No articles matching the criteria were found across any sites.',
+
+  // Upsert articles to the db and return output for the run
+  let upsertedCount = 0;
+  try {
+    const upsertedArticles = await upsertArticles(allFoundArticles);
+    upsertedCount = upsertedArticles.length;
+
+    // Outputting as JSON for potential further processing
+    if (upsertedArticles.length > 0) {
+      logger.info('--- Found Articles (JSON) ---');
+      console.log(JSON.stringify({ upsertedCount, upsertedArticles }));
+    } else {
+      logger.info(
+        'No new articles matching the criteria were found across any sites.',
+      );
+    }
+  } catch (err) {
+    logger.info(
+      `Błąd przy aktualizacji bazy danych: ${err instanceof Error ? err.stack || err.message : String(err)}`,
     );
-    console.log(JSON.stringify([], null, 2)); // Empty JSON array to stdout
   }
 
+  // Update run in the db
   try {
     if (!run) {
       throw new Error('Run not found');
     }
 
-    logToFile('Aktualizuję scrapper_runs po ID: ', run.id);
-    const updatedRun = await updateRunCompleted(run.id);
-    logToFile(
+    logger.info(`Aktualizuję ScrapperRun po ID: ${run.id}`);
+    const updatedRun = await updateRunCompleted(run.id, upsertedCount);
+    logger.info(
       `Powinno się zaktualizować 🤷‍♂️ Start: ${updatedRun?.created_at} End: ${updatedRun?.finished_at}`,
     );
   } catch (err) {
-    logToFile(
-      'Błąd przy aktualizacji scrapper_runs:',
-      err instanceof Error ? err.stack || err.message : err,
+    logger.info(
+      `Błąd przy aktualizacji ScrapperRun: ${err instanceof Error ? err.stack || err.message : String(err)}`,
     );
   }
 
-  // Zamknięcie strumienia logów
-  logStream.end();
+  try {
+    await notifyRunCompleted(run.id.toString(), upsertedCount);
+  } catch (error) {
+    logger.info(
+      `Error sending run-completed notification: ${error instanceof Error ? error.stack || error.message : String(error)}`,
+    );
+  }
 })();

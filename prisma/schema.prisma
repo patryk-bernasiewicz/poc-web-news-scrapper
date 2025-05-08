@@ -10,21 +10,49 @@ datasource db {
 
 /// This model or at least one of its fields has comments in the database, and requires an additional setup for migrations: Read more: https://pris.ly/d/database-comments
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model articles {
-  id         BigInt   @default(autoincrement())
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  title      String
-  lead       String?  @default("")
-  link       String   @unique @default("")
-  slug       String   @unique
+model Article {
+  id           BigInt    @default(autoincrement())
+  created_at   DateTime  @default(now()) @db.Timestamptz(6)
+  title        String
+  lead         String?   @default("")
+  link         String    @unique(map: "articles_link_key") @default("")
+  slug         String    @unique(map: "articles_slug_key")
+  publish_date DateTime?
 
-  @@id([id, title, slug])
+  articleKeywords ArticleKeyword[]
+
+  @@id([id, title, slug], map: "articles_pkey")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model scrapper_runs {
-  id          BigInt    @id @default(autoincrement())
-  created_at  DateTime  @default(now()) @db.Timestamptz(6)
-  finished_at DateTime? @db.Timestamp(6)
-  errored_at  DateTime? @db.Timestamp(6)
+model ScrapperRun {
+  id                BigInt    @id(map: "scrapper_runs_pkey") @default(autoincrement())
+  created_at        DateTime  @default(now()) @db.Timestamptz(6)
+  finished_at       DateTime? @db.Timestamp(6)
+  upserted_articles Int?      @default(0)
+
+  errored_at DateTime? @db.Timestamp(6)
+}
+
+model Keyword {
+  id          BigInt   @id(map: "keywords_pkey") @default(autoincrement())
+  created_at  DateTime @default(now()) @db.Timestamptz(6)
+  name        String
+  slug        String   @unique(map: "keywords_slug_key")
+  description String?
+  is_active   Boolean  @default(true)
+
+  articleKeywords ArticleKeyword[]
+}
+
+model ArticleKeyword {
+  articleId    BigInt
+  articleTitle String
+  articleSlug  String
+  keywordId    BigInt
+
+  article Article @relation(fields: [articleId, articleTitle, articleSlug], references: [id, title, slug])
+  keyword Keyword @relation(fields: [keywordId], references: [id])
+
+  @@id([articleId, articleTitle, articleSlug, keywordId])
 }
