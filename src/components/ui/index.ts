@@ -4,3 +4,4 @@ export * from './Input';
 export * from './Table';
 export * from './ThemeBody';
 export * from './Toaster';
+export * from './Badge';

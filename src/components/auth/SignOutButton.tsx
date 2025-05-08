@@ -13,8 +13,8 @@ export function SignOutButton() {
     router.push('/');
   };
   return (
-    <Button variant="destructive" onClick={handleSignOut}>
-      Sign Out
+    <Button variant="secondary" onClick={handleSignOut}>
+      Wyloguj się
     </Button>
   );
 }

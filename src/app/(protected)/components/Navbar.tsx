@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 const links = [
   {
     href: '/articles',
-    label: 'Articles',
+    label: 'Artykuły',
   },
   {
     href: '/scrapper',
@@ -17,7 +17,7 @@ const links = [
   },
   {
     href: '/sources',
-    label: 'Sources',
+    label: 'Źródła',
   },
 ];
 

@@ -40,6 +40,7 @@ model Keyword {
   description     String?
   is_active       Boolean          @default(true)
   articleKeywords ArticleKeyword[]
+  SourceKeyword   SourceKeyword[]
 }
 
 model ArticleKeyword {
@@ -51,4 +52,27 @@ model ArticleKeyword {
   keyword      Keyword @relation(fields: [keywordId], references: [id])
 
   @@id([articleId, articleTitle, articleSlug, keywordId])
+}
+
+model Source {
+  id                 BigInt          @id(map: "sources_pkey") @default(autoincrement())
+  created_at         DateTime        @default(now()) @db.Timestamptz(6)
+  name               String
+  url                String          @unique(map: "sources_url_key")
+  is_active          Boolean         @default(true)
+  dateStrings        String[]        @default([])
+  containerSelectors String[]        @default([])
+  titleSelectors     String[]        @default([])
+  dateSelectors      String[]        @default([])
+  leadSelectors      String[]        @default([])
+  sourceKeywords     SourceKeyword[]
+}
+
+model SourceKeyword {
+  sourceId  BigInt
+  keywordId BigInt
+  source    Source  @relation(fields: [sourceId], references: [id])
+  keyword   Keyword @relation(fields: [keywordId], references: [id])
+
+  @@id([sourceId, keywordId])
 }

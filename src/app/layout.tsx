@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
-import { Toaster } from '@/components/ui/Sonner';
+import { Toaster } from '@/components/ui/sonner';
 
 import { ThemeBody } from './components/ThemeBody';
 import './globals.css';
