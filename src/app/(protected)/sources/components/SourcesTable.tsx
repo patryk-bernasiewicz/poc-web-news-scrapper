@@ -12,8 +12,8 @@ import { Button } from '@/components/ui/Button';
 import { deleteSource } from '../actions/delete-source';
 import { upsertSource } from '../actions/upsert-source';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
-import { SourceFormValues, SourceModal } from './SourceModal';
-import type { StringField } from './SourceModal';
+import { SourceFormModal } from './SourceFormModal';
+import type { SourceFormValuesInput } from './source-form.types';
 
 interface SourcesTableProps {
   sources: (Source & {
@@ -21,13 +21,9 @@ interface SourcesTableProps {
   })[];
 }
 
-interface SourceFormValuesWithId extends SourceFormValues {
-  id?: string | number | bigint;
-}
-
 export function SourcesTable({ sources }: SourcesTableProps) {
   const [modalOpen, setModalOpen] = useState(false);
-  const [editSource, setEditSource] = useState<SourceFormValuesWithId | null>(
+  const [editSource, setEditSource] = useState<SourceFormValuesInput | null>(
     null,
   );
   const [isEdit, setIsEdit] = useState(false);
@@ -38,10 +34,6 @@ export function SourcesTable({ sources }: SourcesTableProps) {
   );
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  function toStringFields(arr: string[] = []): StringField[] {
-    return arr.map((v) => ({ value: v }));
-  }
-
   function handleEdit(
     source: Source & { sourceKeywords: { keyword: Keyword }[] },
   ) {
@@ -51,11 +43,11 @@ export function SourcesTable({ sources }: SourcesTableProps) {
       url: source.url,
       is_active: source.is_active,
       keywords: source.sourceKeywords.map((sk) => sk.keyword.name),
-      dateStrings: toStringFields(source.dateStrings),
-      containerSelectors: toStringFields(source.containerSelectors),
-      titleSelectors: toStringFields(source.titleSelectors),
-      dateSelectors: toStringFields(source.dateSelectors),
-      leadSelectors: toStringFields(source.leadSelectors),
+      dateStrings: source.dateStrings,
+      containerSelectors: source.containerSelectors,
+      titleSelectors: source.titleSelectors,
+      dateSelectors: source.dateSelectors,
+      leadSelectors: source.leadSelectors,
     });
     setIsEdit(true);
     setModalOpen(true);
@@ -77,7 +69,7 @@ export function SourcesTable({ sources }: SourcesTableProps) {
     setModalOpen(true);
   }
 
-  async function handleSubmit(values: SourceFormValues) {
+  async function handleSubmit(values: SourceFormValuesInput) {
     try {
       const res = await upsertSource(
         values,
@@ -182,10 +174,10 @@ export function SourcesTable({ sources }: SourcesTableProps) {
           ))}
         </tbody>
       </table>
-      <SourceModal
+      <SourceFormModal
         open={modalOpen}
         onOpenChange={setModalOpen}
-        initialValues={editSource || undefined}
+        initialValues={editSource ?? undefined}
         onSubmit={handleSubmit}
         isEdit={isEdit}
       />

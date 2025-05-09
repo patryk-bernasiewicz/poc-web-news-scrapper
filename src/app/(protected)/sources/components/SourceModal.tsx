@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
-interface SourceModalProps {
+interface SourceFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialValues?: SourceFormValuesInput;
@@ -65,13 +65,13 @@ function fromStringFields(arr?: StringField[]): string[] {
   return arr?.map((v) => v.value) || [];
 }
 
-export function SourceModal({
+export function SourceFormModal({
   open,
   onOpenChange,
   initialValues,
   onSubmit,
   isEdit,
-}: SourceModalProps) {
+}: SourceFormModalProps) {
   const [originalValues] = useState<SourceFormValuesInput | undefined>(
     initialValues,
   );

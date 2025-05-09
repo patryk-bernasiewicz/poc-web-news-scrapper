@@ -3,7 +3,7 @@
 import prisma from '@/lib/prisma';
 import { createClient } from '@/utils/supabase/server';
 
-import { SourceFormValues, StringField } from '../components/SourceModal';
+import { SourceFormValues, StringField } from '../components/SourceFormModal';
 
 export async function upsertSource(
   values: SourceFormValues,

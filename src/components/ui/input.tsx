@@ -4,9 +4,10 @@ import { cn } from '@/lib/utils';
 
 interface InputProps extends React.ComponentProps<'input'> {
   description?: string;
+  error?: string;
 }
 
-function Input({ className, type, description, ...props }: InputProps) {
+function Input({ className, type, description, error, ...props }: InputProps) {
   return (
     <div>
       <input
@@ -18,11 +19,13 @@ function Input({ className, type, description, ...props }: InputProps) {
           'aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive',
           className,
         )}
+        aria-invalid={!!error}
         {...props}
       />
       {description && (
         <div className="text-xs text-muted-foreground mt-1">{description}</div>
       )}
+      {error && <div className="text-xs text-destructive mt-1">{error}</div>}
     </div>
   );
 }
