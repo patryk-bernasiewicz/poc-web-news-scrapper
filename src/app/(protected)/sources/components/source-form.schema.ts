@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 import { isValidCssSelector } from './source-form.types';
 
+const keywordRegex = /^[\p{L}\d ]+$/u;
+
 export const sourceFormSchema = z.object({
   name: z.string().min(3, 'Nazwa musi mieć co najmniej 3 znaki'),
   url: z
@@ -13,7 +15,15 @@ export const sourceFormSchema = z.object({
     ),
   is_active: z.boolean(),
   keywords: z
-    .array(z.string().min(1))
+    .array(
+      z
+        .string()
+        .min(1)
+        .regex(
+          keywordRegex,
+          'Słowa kluczowe mogą zawierać tylko litery, cyfry i spacje',
+        ),
+    )
     .min(1, 'Dodaj co najmniej jedno słowo kluczowe'),
   dateStrings: z.array(z.object({ value: z.string() })),
   containerSelectors: z

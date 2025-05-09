@@ -3,12 +3,13 @@
 import prisma from '@/lib/prisma';
 import { createClient } from '@/utils/supabase/server';
 
-import { SourceFormValues, StringField } from '../components/SourceFormModal';
+import { SourceFormValues, StringField } from '../components/source-form.types';
 
 export async function upsertSource(
   values: SourceFormValues,
   sourceId?: bigint | number | string,
 ) {
+  console.log('========== [upsertSource]', values);
   const supabase = await createClient();
   const {
     data: { user },

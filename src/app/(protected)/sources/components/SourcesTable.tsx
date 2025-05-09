@@ -8,12 +8,21 @@ import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 import { deleteSource } from '../actions/delete-source';
 import { upsertSource } from '../actions/upsert-source';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { SourceFormModal } from './SourceFormModal';
 import type { SourceFormValuesInput } from './source-form.types';
+import { toStringFields } from './source-form.types';
 
 interface SourcesTableProps {
   sources: (Source & {
@@ -38,7 +47,7 @@ export function SourcesTable({ sources }: SourcesTableProps) {
     source: Source & { sourceKeywords: { keyword: Keyword }[] },
   ) {
     setEditSource({
-      id: source.id,
+      id: source.id.toString(),
       name: source.name,
       url: source.url,
       is_active: source.is_active,
@@ -71,8 +80,16 @@ export function SourcesTable({ sources }: SourcesTableProps) {
 
   async function handleSubmit(values: SourceFormValuesInput) {
     try {
+      const valuesForBackend = {
+        ...values,
+        dateStrings: toStringFields(values.dateStrings),
+        containerSelectors: toStringFields(values.containerSelectors),
+        titleSelectors: toStringFields(values.titleSelectors),
+        dateSelectors: toStringFields(values.dateSelectors),
+        leadSelectors: toStringFields(values.leadSelectors),
+      };
       const res = await upsertSource(
-        values,
+        valuesForBackend,
         isEdit && editSource ? editSource.id : undefined,
       );
       if (res && res.success) {
@@ -119,22 +136,28 @@ export function SourcesTable({ sources }: SourcesTableProps) {
           <Plus className="w-4 h-4 mr-2" /> Dodaj źródło
         </Button>
       </div>
-      <table className="min-w-full divide-y divide-border">
-        <thead>
-          <tr>
-            <th className="px-4 py-2 text-left text-sm text-ring">Nazwa</th>
-            <th className="px-4 py-2 text-left text-sm text-ring">URL</th>
-            <th className="px-4 py-2 text-left text-sm text-ring">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="px-4 py-2 text-left text-sm text-ring">
+              Nazwa
+            </TableHead>
+            <TableHead className="px-4 py-2 text-left text-sm text-ring">
+              URL
+            </TableHead>
+            <TableHead className="px-4 py-2 text-left text-sm text-ring">
               Słowa kluczowe
-            </th>
-            <th className="px-4 py-2 text-left text-sm text-ring">Akcje</th>
-          </tr>
-        </thead>
-        <tbody>
+            </TableHead>
+            <TableHead className="px-4 py-2 text-left text-sm text-ring">
+              Akcje
+            </TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {sources.map((source) => (
-            <tr key={source.id} className="border-b">
-              <td className="px-4 py-2">{source.name}</td>
-              <td className="px-4 py-2">
+            <TableRow key={source.id} className="border-b">
+              <TableCell className="px-4 py-2">{source.name}</TableCell>
+              <TableCell className="px-4 py-2">
                 <a
                   href={source.url}
                   target="_blank"
@@ -143,15 +166,15 @@ export function SourcesTable({ sources }: SourcesTableProps) {
                 >
                   {source.url}
                 </a>
-              </td>
-              <td className="px-4 py-2">
+              </TableCell>
+              <TableCell className="px-4 py-2">
                 <div className="flex flex-wrap gap-1">
                   {source.sourceKeywords.map((sk) => (
                     <Badge key={sk.keyword.id}>{sk.keyword.name}</Badge>
                   ))}
                 </div>
-              </td>
-              <td className="px-4 py-2">
+              </TableCell>
+              <TableCell className="px-4 py-2">
                 <div className="flex gap-2"></div>
                 <Button
                   size="icon"
@@ -169,11 +192,11 @@ export function SourcesTable({ sources }: SourcesTableProps) {
                 >
                   <Trash2 className="w-4 h-4" />
                 </Button>
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
       <SourceFormModal
         open={modalOpen}
         onOpenChange={setModalOpen}
