@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Use 'nuqs' for URL search parameter state management.
+- Optimize Web Vitals (LCP, CLS, FID).
+- Limit 'use client':
+  - Favor server components and Next.js SSR.
+  - Use only for Web API access in small components.
+  - Avoid for data fetching or state management.
+- Follow Next.js docs for Data Fetching, Rendering, and Routing.
+- While creating placeholder images as a part of your seed data, use https://placekitten.com/
+- Place both the /app and /components folders under a /src directory. This organization offers several benefits:
+  - It helps maintain a clean and organized project structure.
+  - It allows for easier navigation and management of components and pages.
+  - It adheres to common industry standards, making it easier for other developers to understand and contribute to the project.
+  - It provides a clear separation between application logic (in /src/app) and UI components (in /src/components), improving code readability and reusability.
+  - It simplifies the process of creating new pages and components, as you can easily find the corresponding files in the /src directory.
+  - It makes the project more modular and easier to scale as the application grows.
+  - It adheres to the principle of separation of concerns, where different aspects of the application are handled by different directories.
+
+- When working with Server Actions in Next.js, always make sure they are secure (eg. they validate user with Supabase)

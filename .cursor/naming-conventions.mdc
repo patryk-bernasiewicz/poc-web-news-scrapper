@@ -1,0 +1,10 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- All reusable components should go in src/components and be named like new-component.tsx
+- Feature-specific components should go next to their respective app router's page file
+- Use lowercase with dashes for directories (e.g., components/auth-wizard).
+
+- Favor named exports for components.
