@@ -7,6 +7,6 @@ export function createQueryClient() {
 export async function fetchWithAuth(input: RequestInfo, init?: RequestInit) {
   return fetch(input, {
     ...init,
-    credentials: 'include', // dołącza cookies (w tym supabase)
+    credentials: 'include', // includes cookies (including supabase)
   });
 }

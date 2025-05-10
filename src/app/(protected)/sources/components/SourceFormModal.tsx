@@ -90,7 +90,7 @@ export function SourceFormModal({
     }
   }, [open, initialValues, reset]);
 
-  // Keywords as tags (prosty input z przecinkiem)
+  // Keywords as tags (simple input with comma)
   const keywords = watch('keywords');
   const [keywordInput, setKeywordInput] = useState('');
 

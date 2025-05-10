@@ -6,7 +6,7 @@ export type ScrappedPageConfig = {
   dateSelectors: string[];
   titleSelectors: string[];
   leadSelectors: string[];
-  dateStrings?: string[]; // Optional: e.g., ['dzisiaj', 'today']
+  dateStrings?: string[]; // Optional: e.g., ['today', 'dzisiaj']
 };
 
 export type SerializableScrapperRun = Omit<

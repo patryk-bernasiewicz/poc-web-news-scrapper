@@ -1,4 +1,5 @@
 import { Keyword, Source } from '@prisma/client';
+import { parse } from 'date-fns';
 import { BrowserContext, ElementHandle } from 'playwright';
 import slugify from 'slugify';
 
@@ -118,8 +119,20 @@ export async function scrapSource(
         `MATCH FOUND on ${entry.url}: "${titleText}" (Date: ${dateText}, Link: ${link || 'N/A'}) `,
       );
       logger.info(`Keywords for article: ${keywordIds}`);
-      const publishDate = !isNaN(new Date(dateText).getTime())
-        ? new Date(dateText).toISOString()
+      // --- Poprawne parsowanie daty ---
+      let parsedDate: Date | null = null;
+      // Try dd.MM.yyyy format first
+      if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateText)) {
+        parsedDate = parse(dateText, 'dd.MM.yyyy', new Date());
+        // TODO: reinstall date-fns
+      } else {
+        const genericParsed = new Date(dateText);
+        if (!isNaN(genericParsed.getTime())) {
+          parsedDate = genericParsed;
+        }
+      }
+      const publishDate = parsedDate
+        ? parsedDate.toISOString()
         : new Date().toISOString();
       const article: UpsertArticleDTO & { keywordIds: number[] } = {
         title: titleText,
