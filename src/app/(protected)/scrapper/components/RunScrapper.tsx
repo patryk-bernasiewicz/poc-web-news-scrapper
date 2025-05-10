@@ -121,21 +121,6 @@ export default function RunScrapper({
           Ostatni pomyślny scrap: {lastRunFormattedDate}
         </div>
       )}
-      <div>
-        {runningJob && (
-          <pre>
-            {JSON.stringify(
-              {
-                created_at: runningJob.created_at,
-                isRunningJob: !!runningJob,
-                isPending,
-              },
-              null,
-              2,
-            )}
-          </pre>
-        )}
-      </div>
       {error && <div className="text-red-500">{error}</div>}
     </>
   );

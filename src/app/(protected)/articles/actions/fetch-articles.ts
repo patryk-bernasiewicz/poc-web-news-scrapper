@@ -6,7 +6,14 @@ export async function fetchArticles(): Promise<Article[] | null> {
   try {
     const articles = await prisma.article.findMany({
       orderBy: {
-        created_at: 'desc',
+        publish_date: 'desc',
+      },
+      include: {
+        articleKeywords: {
+          include: {
+            keyword: true,
+          },
+        },
       },
     });
 

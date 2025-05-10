@@ -1,12 +1,12 @@
+import { Keyword, Source } from '@prisma/client';
 import * as playwright from 'playwright';
 import slugify from 'slugify';
 
-import { ScrappedPageConfig } from '@/app/(protected)/scrapper/types';
+import prisma from '@/lib/prisma';
 import getRunById from '@/utils/db/queries/getRunById';
 import updateRunCompleted from '@/utils/db/queries/updateRunCompleted';
-import upsertArticles, {
-  UpsertArticleDTO,
-} from '@/utils/db/queries/upsertArticles';
+import type { UpsertArticleDTO } from '@/utils/db/queries/upsertArticles';
+import upsertArticles from '@/utils/db/queries/upsertArticles';
 
 import { createLogger } from '../utils/create-logger';
 import { isWithinLast24Hours } from './utils/is-within-24-hours';
@@ -19,39 +19,10 @@ BigInt.prototype.toJSON = function () {
   return int ?? this.toString();
 };
 
-const pages: ScrappedPageConfig[] = [
-  {
-    url: 'https://podatki.gazetaprawna.pl/',
-    containerSelector: 'div.listItem', // Adjust if needed
-    dateSelector: 'time.datePublished', // Adjust if needed
-    titleSelector: 'div.itemTitle', // Adjust if needed
-    leadSelector: 'p.lead', // Adjust if needed
-    // Provide dateString for specific text check, or nothing for generic time check
-    dateString: 'dzisiaj', // Example string check
-  },
-  {
-    url: 'https://www.prawo.pl/podatki/aktualnosci/',
-    containerSelector: 'article.article', // Adjust if needed
-    dateSelector: 'span.date', // Adjust if needed
-    titleSelector: 'h2.title', // Adjust if needed
-    leadSelector: 'p.desc', // Adjust if needed
-  },
-  {
-    url: 'https://www.pit.pl/aktualnosci/',
-    containerSelector: 'article.article', // Adjust if needed
-    dateSelector: 'time[datetime]',
-    titleSelector: '.col-article > h2',
-    leadSelector: '.col-article > p', // Adjust if needed
-    dateString: ' temu', // Example string check
-  },
-];
-const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
-
 (async () => {
   const logger = createLogger('scrap-web');
 
   const runId = BigInt(process.argv[3]);
-
   await notifyRunCreated(runId.toString());
 
   const run = await getRunById(runId);
@@ -59,15 +30,29 @@ const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
     throw new Error('Run not found in db');
   }
 
-  // logger.info(`Przeszukuję strony: ${JSON.stringify(pages)}`);
-  // logger.info(`Poszukuję słów kluczowych: ${JSON.stringify(keywords)}`);
-
   const browser = await playwright.chromium.launch();
   // Global set to keep track of processed slugs across all parallel tasks
   const globalProcessedSlugs = new Set<string>();
 
+  // Fetch all keywords from the database (for mapping by name)
+  const allKeywords: Keyword[] = await prisma.keyword.findMany();
+  // Fetch all sources with their keywords
+  const pages: (Source & { sourceKeywords: { keyword: Keyword }[] })[] =
+    await prisma.source.findMany({
+      where: { is_active: true },
+      include: {
+        sourceKeywords: { include: { keyword: true } },
+      },
+    });
+
   const scrapingPromises = pages.map(async (entry) => {
-    const siteSpecificArticles: UpsertArticleDTO[] = [];
+    // Extract keywords for this source (as string[])
+    const sourceKeywords = (entry.sourceKeywords as { keyword: Keyword }[]).map(
+      (sk) => sk.keyword.name.toLowerCase(),
+    );
+    const siteSpecificArticles: (UpsertArticleDTO & {
+      keywordIds: number[];
+    })[] = [];
     const context = await browser.newContext(); // Create a new context for each site
     const page = await context.newPage(); // Create a new page for each site
     let articlesProcessed = 0; // Counter for limiting articles per site
@@ -81,11 +66,16 @@ const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
       });
       logger.info(`Visited ${entry.url}`);
 
-      await page.waitForSelector(entry.containerSelector, {
-        timeout: 15000, // Adjusted timeout
-      });
-
-      const containers = await page.$$(entry.containerSelector);
+      // Fallback: find the first selector that returns containers
+      let containers: playwright.ElementHandle[] = [];
+      for (const selector of entry.containerSelectors) {
+        containers = await page.$$(selector);
+        if (containers.length > 0) break;
+      }
+      if (containers.length === 0) {
+        logger.info(`No containers found for ${entry.url}`);
+        return [];
+      }
       logger.info(
         `Found ${containers.length} potential article containers on ${entry.url}.`,
       );
@@ -97,9 +87,22 @@ const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
         }
 
         // --- Extract Data ---
-        const dateElement = await container.$(entry.dateSelector);
-        const titleElement = await container.$(entry.titleSelector);
-        const leadElement = await container.$(entry.leadSelector);
+        // Fallback: find the first selector that returns an element
+        let dateElement = null;
+        for (const selector of entry.dateSelectors) {
+          dateElement = await container.$(selector);
+          if (dateElement) break;
+        }
+        let titleElement = null;
+        for (const selector of entry.titleSelectors) {
+          titleElement = await container.$(selector);
+          if (titleElement) break;
+        }
+        let leadElement = null;
+        for (const selector of entry.leadSelectors) {
+          leadElement = await container.$(selector);
+          if (leadElement) break;
+        }
         let link: string | undefined | null =
           await container.getAttribute('href');
         if (!link) {
@@ -128,9 +131,9 @@ const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
 
         const dateText = (await dateElement.innerText()).trim();
         const titleText =
-          (await titleElement.innerText()).trim() || 'Nieznany tytuł!';
+          (await titleElement.innerText()).trim() || 'Unknown title!';
         const leadText =
-          (await leadElement?.innerText())?.trim() || 'Brak opisu!';
+          (await leadElement?.innerText())?.trim() || 'No description!';
 
         // --- Generate Slug ---
         const slug = slugify(titleText, {
@@ -151,27 +154,35 @@ const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
 
         // --- Keyword Check ---
         const combinedText = `${titleText} ${leadText}`.toLowerCase();
-        const keywordFound = keywords.some((keyword) =>
-          combinedText.includes(keyword.toLowerCase()),
+        // Check which keywords from this source are present in the article
+        const matchedKeywords = sourceKeywords.filter((keyword: string) =>
+          combinedText.includes(keyword),
         );
-
-        if (!keywordFound) {
+        if (matchedKeywords.length === 0) {
           continue;
         }
+        // Find the ids of these keywords in allKeywords
+        const keywordIds = allKeywords
+          .filter((k) => matchedKeywords.includes(k.name.toLowerCase()))
+          .map((k) => (typeof k.id === 'bigint' ? Number(k.id) : k.id));
 
         // --- Add Article ---
         logger.info(
           `MATCH FOUND on ${entry.url}: "${titleText}" (Date: ${dateText}, Link: ${link || 'N/A'}) `,
         );
+        logger.info(`Keywords for article: ${keywordIds}`);
 
-        const article: UpsertArticleDTO = {
+        const publishDate = !isNaN(new Date(dateText).getTime())
+          ? new Date(dateText).toISOString()
+          : new Date().toISOString();
+
+        const article: UpsertArticleDTO & { keywordIds: number[] } = {
           title: titleText,
           lead: leadText,
           link: link || '',
           slug,
-          publish_date: !isNaN(new Date(dateText).getTime())
-            ? new Date(dateText)
-            : new Date(),
+          publish_date: publishDate,
+          keywordIds,
         };
 
         siteSpecificArticles.push(article);
@@ -211,13 +222,14 @@ const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
   // Upsert articles to the db and return output for the run
   let upsertedCount = 0;
   try {
+    // Pass keywordIds to upsertArticles and handle many-to-many relation in this function
     const upsertedArticles = await upsertArticles(allFoundArticles);
+
     upsertedCount = upsertedArticles.length;
 
     // Outputting as JSON for potential further processing
     if (upsertedArticles.length > 0) {
-      logger.info('--- Found Articles (JSON) ---');
-      console.log(JSON.stringify({ upsertedCount, upsertedArticles }));
+      logger.info(`--- Upserted ${upsertArticles.length} Articles (JSON) ---`);
     } else {
       logger.info(
         'No new articles matching the criteria were found across any sites.',
@@ -225,7 +237,7 @@ const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
     }
   } catch (err) {
     logger.info(
-      `Błąd przy aktualizacji bazy danych: ${err instanceof Error ? err.stack || err.message : String(err)}`,
+      `Error while updating the database: ${err instanceof Error ? err.stack || err.message : String(err)}`,
     );
   }
 
@@ -235,14 +247,14 @@ const keywords = ['podatki', 'podatkowe', 'zmiany', 'vat', 'pit', 'ustawa'];
       throw new Error('Run not found');
     }
 
-    logger.info(`Aktualizuję ScrapperRun po ID: ${run.id}`);
+    logger.info(`Updating ScrapperRun by ID: ${run.id}`);
     const updatedRun = await updateRunCompleted(run.id, upsertedCount);
     logger.info(
-      `Powinno się zaktualizować 🤷‍♂️ Start: ${updatedRun?.created_at} End: ${updatedRun?.finished_at}`,
+      `Should be updated 🤷‍♂️ Start: ${updatedRun?.created_at} End: ${updatedRun?.finished_at}`,
     );
   } catch (err) {
     logger.info(
-      `Błąd przy aktualizacji ScrapperRun: ${err instanceof Error ? err.stack || err.message : String(err)}`,
+      `Error while updating ScrapperRun: ${err instanceof Error ? err.stack || err.message : String(err)}`,
     );
   }
 

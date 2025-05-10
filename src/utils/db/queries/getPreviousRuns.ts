@@ -1,3 +1,5 @@
+'use server';
+
 import { ScrapperRun } from '@prisma/client';
 
 import prisma from '@/lib/prisma';

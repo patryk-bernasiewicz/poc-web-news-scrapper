@@ -17,7 +17,7 @@ model Article {
   lead            String?          @default("")
   link            String           @unique(map: "articles_link_key") @default("")
   slug            String           @unique(map: "articles_slug_key")
-  publish_date    DateTime?
+  publish_date    String
   articleKeywords ArticleKeyword[]
 
   @@id([id, title, slug], map: "articles_pkey")
@@ -71,8 +71,8 @@ model Source {
 model SourceKeyword {
   sourceId  BigInt
   keywordId BigInt
-  source    Source  @relation(fields: [sourceId], references: [id])
   keyword   Keyword @relation(fields: [keywordId], references: [id])
+  source    Source  @relation(fields: [sourceId], references: [id])
 
   @@id([sourceId, keywordId])
 }

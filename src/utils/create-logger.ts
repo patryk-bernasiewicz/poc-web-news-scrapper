@@ -10,7 +10,7 @@ import {
 
 const getLogPath = (name: string) => {
   const now = Date.now();
-  const formattedDate = format(now, 'yyyy-MM-dd HH:mm:ss');
+  const formattedDate = format(now, 'yyyy-MM-dd_HH-mm-ss');
   return path.join(process.cwd(), 'logs', `${name}-${formattedDate}.log`);
 };
 

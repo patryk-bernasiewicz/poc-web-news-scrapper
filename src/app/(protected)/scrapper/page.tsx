@@ -1,3 +1,5 @@
+import { revalidatePath } from 'next/cache';
+
 import getCurrentRun from '@/utils/db/queries/getCurrentRun';
 import getLastRun from '@/utils/db/queries/getLastRun';
 import getPreviousRuns from '@/utils/db/queries/getPreviousRuns';
@@ -12,6 +14,11 @@ export default async function ScrapperPage() {
   const lastRun = await getLastRun();
   const previousRuns = await getPreviousRuns({ limit: 10, offset: 0 });
 
+  const revalidate = async () => {
+    'use server';
+    revalidatePath('/scrapper');
+  };
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-4">Scrapper</h1>
@@ -23,7 +30,11 @@ export default async function ScrapperPage() {
         runningJob={!existingRun?.errored_at ? existingRun : null}
         lastRun={lastRun}
       />
-      <RunsList runs={previousRuns} onFetchMore={getPreviousRuns} />
+      <RunsList
+        runs={previousRuns}
+        onFetchMore={getPreviousRuns}
+        onRevalidate={revalidate}
+      />
     </div>
   );
 }

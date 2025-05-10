@@ -2,12 +2,11 @@ import { ScrapperRun } from '@prisma/client';
 
 export type ScrappedPageConfig = {
   url: string;
-  containerSelector: string;
-  dateSelector: string;
-  titleSelector: string;
-  leadSelector: string;
-  // Removed dateFormat
-  dateString?: string; // Optional: e.g., 'dzisiaj', 'today'
+  containerSelectors: string[];
+  dateSelectors: string[];
+  titleSelectors: string[];
+  leadSelectors: string[];
+  dateStrings?: string[]; // Optional: e.g., ['dzisiaj', 'today']
 };
 
 export type SerializableScrapperRun = Omit<

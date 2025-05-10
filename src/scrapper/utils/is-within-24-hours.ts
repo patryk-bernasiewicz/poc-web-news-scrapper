@@ -7,13 +7,11 @@ export const isWithinLast24Hours = async (
   dateText: string,
   entry: ScrappedPageConfig,
 ): Promise<boolean> => {
-  if (entry.dateString) {
-    const stringMatch = dateText
-      .toLowerCase()
-      .includes(entry.dateString.toLowerCase());
-    if (stringMatch) {
-      return true;
-    }
+  if (entry.dateStrings && entry.dateStrings.length > 0) {
+    const found = entry.dateStrings.some((ds) =>
+      dateText.toLowerCase().includes(ds.toLowerCase()),
+    );
+    if (found) return true;
   }
 
   let articleDate: Date | null = null;

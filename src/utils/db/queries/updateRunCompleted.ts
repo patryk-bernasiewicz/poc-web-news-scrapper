@@ -7,8 +7,8 @@ export default async function updateRunCompleted(
   count?: number,
 ) {
   const run = await prisma.scrapperRun.update({
-    where: { id: runId, upserted_articles: count },
-    data: { finished_at: new Date() },
+    where: { id: runId },
+    data: { finished_at: new Date(), upserted_articles: count },
   });
   return run;
 }

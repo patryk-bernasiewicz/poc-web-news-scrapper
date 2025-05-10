@@ -1,3 +1,5 @@
+import { format } from 'date-fns';
+
 import { fetchArticles } from './actions/fetch-articles';
 
 export default async function ArticlesPage() {
@@ -9,18 +11,28 @@ export default async function ArticlesPage() {
       <div>
         <ul className="flex flex-col items-start list-decimal">
           {articles?.length ? (
-            articles.map((article) => (
-              <li key={article.id} className="my-2">
-                <a
-                  href={article.link}
-                  target="_blank"
-                  className="text-blue-500 hover:underline"
-                >
-                  {article.title}
-                </a>
-                <div>{article.lead}</div>
-              </li>
-            ))
+            articles.map((article) => {
+              return (
+                <li key={article.id} className="my-2">
+                  <a
+                    href={article.link}
+                    target="_blank"
+                    className="text-blue-500 hover:underline"
+                  >
+                    {article.title}
+                  </a>
+                  <div className="text-sm text-secondary-foreground/50">
+                    <time>
+                      Data publikacji: {article.publish_date?.toString()}{' '}
+                      {article.publish_date
+                        ? format(article.publish_date, 'dd-MM-yyyy')
+                        : 'nieznana'}
+                    </time>
+                  </div>
+                  <div>{article.lead}</div>
+                </li>
+              );
+            })
           ) : (
             <div>No articles to show.</div>
           )}
