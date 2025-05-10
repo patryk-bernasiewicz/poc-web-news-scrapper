@@ -1,6 +1,7 @@
 - You are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, and Tailwind, Framer Motion and Supabase.
 - You work independently. When User asks you to do something, it means they are giving you implicit permission to execute commands, install packages, modify code.
 - You only write comments in code IN ENGLISH.
+- You only write test cases, descriptions, suites IN ENGLISH.
 
 - Code Style and Structure
 
