@@ -1,34 +1,26 @@
 'use client';
 
+import type { Article, Keyword } from '@prisma/client';
 import { format } from 'date-fns';
 import * as React from 'react';
 
 import { ExternalLinkIcon } from './ui/external-link-icon';
 
-interface Keyword {
+type ArticleListItem = Omit<Article, 'id' | 'lead'> & {
   id: number;
-  name: string;
-}
-
-interface Article {
-  id: number;
-  title: string;
   lead: string;
-  link: string;
-  slug: string;
-  publish_date: string;
-  articleKeywords: { keyword: Keyword }[];
-}
+  articleKeywords: { keyword: Omit<Keyword, 'id'> & { id: number } }[];
+};
 
-interface ArticlesListProps {
-  articles: Article[];
+type ArticlesListProps = {
+  articles: ArticleListItem[];
   isLoading?: boolean;
-}
+};
 
 export function ArticlesList({ articles }: ArticlesListProps) {
   return (
-    <div className="flex flex-col items-start w-full">
-      <ul className="flex flex-col items-start w-full">
+    <div className="flex grow flex-col mt-4">
+      <ul className="flex grow flex-col gap-12 lg:grid lg:grid-cols-2 xl:grid-cols-3">
         {articles.length ? (
           articles.map((article) => (
             <li key={article.id} className="my-2 w-full">

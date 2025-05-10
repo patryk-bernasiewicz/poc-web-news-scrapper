@@ -1,19 +1,18 @@
 import * as Dialog from '@radix-ui/react-dialog';
-import { ReactNode } from 'react';
 
 import { Button } from './Button';
 
-interface ConfirmDialogProps {
+type ConfirmDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
   loading?: boolean;
-  description?: ReactNode;
-  title?: ReactNode;
+  description?: string;
+  title?: string;
   confirmLabel?: string;
   cancelLabel?: string;
   confirmVariant?: 'default' | 'destructive';
-}
+};
 
 export function ConfirmDialog({
   open,

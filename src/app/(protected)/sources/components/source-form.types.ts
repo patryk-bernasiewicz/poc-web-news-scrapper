@@ -1,10 +1,8 @@
-// Typy i helpery do formularza źródła
+// Types and helpers for the source form
 
-export interface StringField {
-  value: string;
-}
+type StringField = { value: string };
 
-export interface SourceFormValues {
+type SourceFormValues = {
   name: string;
   url: string;
   is_active: boolean;
@@ -14,9 +12,9 @@ export interface SourceFormValues {
   titleSelectors: StringField[];
   dateSelectors: StringField[];
   leadSelectors: StringField[];
-}
+};
 
-export interface SourceFormValuesInput {
+type SourceFormValuesInput = {
   name: string;
   url: string;
   is_active: boolean;
@@ -27,17 +25,17 @@ export interface SourceFormValuesInput {
   dateSelectors: string[];
   leadSelectors: string[];
   id?: string | number | bigint;
-}
+};
 
-export function toStringFields(arr: string[] = []): StringField[] {
+function toStringFields(arr: string[] = []): StringField[] {
   return arr.map((v) => ({ value: v }));
 }
 
-export function fromStringFields(arr?: StringField[]): string[] {
+function fromStringFields(arr?: StringField[]): string[] {
   return arr?.map((v) => v.value) || [];
 }
 
-export function isValidCssSelector(selector: string) {
+function isValidCssSelector(selector: string) {
   try {
     document.createDocumentFragment().querySelector(selector);
     return true;
@@ -45,3 +43,6 @@ export function isValidCssSelector(selector: string) {
     return false;
   }
 }
+
+export type { StringField, SourceFormValues, SourceFormValuesInput };
+export { toStringFields, fromStringFields, isValidCssSelector };

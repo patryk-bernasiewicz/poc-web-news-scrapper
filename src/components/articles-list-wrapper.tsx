@@ -14,11 +14,11 @@ type ArticleListItem = Omit<Article, 'id' | 'lead'> & {
   articleKeywords: { keyword: Omit<Keyword, 'id'> & { id: number } }[];
 };
 
-interface ArticlesListWrapperProps {
+type ArticlesListWrapperProps = {
   initialArticles: (Article & { articleKeywords: { keyword: Keyword }[] })[];
   totalArticles: number;
   fetchArticlesFn: typeof fetchArticles;
-}
+};
 
 function mapToArticleListItem(
   article: Article & { articleKeywords: { keyword: Keyword }[] },

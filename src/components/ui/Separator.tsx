@@ -1,9 +1,9 @@
 import { cn } from '@/lib/utils';
 
-interface SeparatorProps {
+type SeparatorProps = {
   orientation?: 'horizontal' | 'vertical';
   className?: string;
-}
+};
 
 export function Separator({
   orientation = 'horizontal',
