@@ -15,6 +15,13 @@ const eslintConfig = [
   {
     rules: {
       'no-unreachable': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          varsIgnorePattern: '^_{1,3}$',
+          argsIgnorePattern: '^_{1,3}$',
+        },
+      ],
     },
   },
 ];

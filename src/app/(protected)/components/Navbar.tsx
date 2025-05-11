@@ -19,6 +19,10 @@ const links = [
     href: '/sources',
     label: 'Źródła',
   },
+  {
+    href: '/keywords',
+    label: 'Słowa kluczowe',
+  },
 ];
 
 export const Navbar = () => {

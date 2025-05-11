@@ -41,6 +41,10 @@ model Keyword {
   is_active       Boolean          @default(true)
   articleKeywords ArticleKeyword[]
   SourceKeyword   SourceKeyword[]
+
+  parentKeywordId BigInt?
+  parentKeyword   Keyword?  @relation("RelatedKeywords", fields: [parentKeywordId], references: [id])
+  relatedKeywords Keyword[] @relation("RelatedKeywords")
 }
 
 model ArticleKeyword {

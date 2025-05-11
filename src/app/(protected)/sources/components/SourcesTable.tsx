@@ -15,14 +15,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@/components/ui/Table';
 
 import { deleteSource } from '../actions/delete-source';
 import { upsertSource } from '../actions/upsert-source';
+import type { SourceFormValuesInput } from '../types/source-form.types';
+import { toStringFields } from '../types/source-form.types';
 import { ConfirmDeleteModal } from './ConfirmDeleteModal';
 import { SourceFormModal } from './SourceFormModal';
-import type { SourceFormValuesInput } from './source-form.types';
-import { toStringFields } from './source-form.types';
 
 interface SourcesTableProps {
   sources: (Source & {

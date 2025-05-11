@@ -12,13 +12,13 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Input } from '@/components/ui/Input';
 import { Separator } from '@/components/ui/Separator';
 
-import { sourceFormSchema } from './source-form.schema';
+import { sourceFormSchema } from '../const/source-form.schema';
 import {
   SourceFormValues,
   SourceFormValuesInput,
   fromStringFields,
   toStringFields,
-} from './source-form.types';
+} from '../types/source-form.types';
 
 interface SourceFormModalProps {
   open: boolean;

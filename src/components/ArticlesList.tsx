@@ -4,7 +4,7 @@ import type { Article, Keyword } from '@prisma/client';
 import { format } from 'date-fns';
 import * as React from 'react';
 
-import { ExternalLinkIcon } from './ui/external-link-icon';
+import { ExternalLinkIcon } from './ui/ExternalLinkIcon';
 
 type ArticleListItem = Omit<Article, 'id' | 'lead'> & {
   id: number;

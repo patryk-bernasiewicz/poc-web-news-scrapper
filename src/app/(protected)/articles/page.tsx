@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 
-import { ArticlesListWrapper } from '@/components/articles-list-wrapper';
+import { ArticlesListWrapper } from '@/components/ArticlesListWrapper';
 
 import { fetchArticles, fetchArticlesCount } from './actions/fetch-articles';
 

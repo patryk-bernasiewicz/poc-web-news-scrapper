@@ -3,8 +3,8 @@ description:
 globs: 
 alwaysApply: true
 ---
-- All reusable components should go in src/components and be named like new-component.tsx
+- All reusable components should go in src/components and be named in PascalCase like NewComponent.tsx
 - Feature-specific components should go next to their respective app router's page file
-- Use lowercase with dashes for directories (e.g., components/auth-wizard).
+- Use same rules for directories containing components - PascalCase name (e.g., components/NewComponent or components/AuthWizard).
 
 - Favor named exports for components.

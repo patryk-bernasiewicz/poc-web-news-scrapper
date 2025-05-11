@@ -4,8 +4,8 @@ import type { Article, Keyword } from '@prisma/client';
 import * as React from 'react';
 
 import type { fetchArticles } from '@/app/(protected)/articles/actions/fetch-articles';
-import { ArticlesList } from '@/components/articles-list';
-import { Pagination } from '@/components/ui/pagination';
+import { ArticlesList } from '@/components/ArticlesList';
+import { Pagination } from '@/components/ui/Pagination';
 
 // Local type for client state (id: number, lead: string, id: number w keyword)
 type ArticleListItem = Omit<Article, 'id' | 'lead'> & {

@@ -1,0 +1,6 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+- Don't suggest using and creating migrations, instead: prefer suggesting pulling and pushing from and to the database using Prisma CLI commands, `npx prisma db push` and `npx prisma db pull`.

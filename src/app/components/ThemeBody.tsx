@@ -1,12 +1,17 @@
 'use client';
 
-import { Roboto } from 'next/font/google';
+import { Roboto, Roboto_Mono } from 'next/font/google';
 
 import { cn } from '@/lib/utils';
 import { usePrefersDarkMode } from '@/ui/hooks/usePrefersDarkMode';
 
 const roboto = Roboto({
   variable: '--font-roboto',
+  subsets: ['latin-ext'],
+});
+
+const robotoMono = Roboto_Mono({
+  variable: '--font-roboto-mono',
   subsets: ['latin-ext'],
 });
 
@@ -21,6 +26,7 @@ export function ThemeBody({ children }: ThemeBodyProps) {
     <body
       className={cn(
         roboto.variable,
+        robotoMono.variable,
         'antialiased',
         prefersDarkMode ? 'dark' : 'light',
       )}

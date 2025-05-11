@@ -3,7 +3,7 @@
 import prisma from '@/lib/prisma';
 import { createClient } from '@/utils/supabase/server';
 
-import { SourceFormValues, StringField } from '../components/source-form.types';
+import { SourceFormValues, StringField } from '../types/source-form.types';
 
 export async function upsertSource(
   values: SourceFormValues,

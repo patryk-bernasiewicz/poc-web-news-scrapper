@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { isValidCssSelector } from './source-form.types';
+import { isValidCssSelector } from '../types/source-form.types';
 
 const keywordRegex = /^[\p{L}\d ]+$/u;
 
