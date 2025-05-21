@@ -1,15 +1,20 @@
 import { PrismaClient } from '@prisma/client';
-import type { User } from '@supabase/supabase-js';
 
-import withUserAuth from './withUserAuth';
+import { createClient } from '@/utils/supabase/server';
 
 const prisma = new PrismaClient();
 
-async function fetchMainKeywords(_: User) {
+async function fetchMainKeywords() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
   return await prisma.keyword.findMany({
     where: { parentKeywordId: null },
     orderBy: { created_at: 'desc' },
   });
 }
 
-export default withUserAuth(fetchMainKeywords);
+export default fetchMainKeywords;

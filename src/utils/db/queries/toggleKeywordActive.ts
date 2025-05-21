@@ -1,12 +1,15 @@
 'use server';
 
-import type { User } from '@supabase/supabase-js';
-
 import prisma from '@/lib/prisma';
+import { createClient } from '@/utils/supabase/server';
 
-import withUserAuth from './withUserAuth';
+async function toggleKeywordActive(keywordId: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
 
-async function toggleKeywordActive(_: User, keywordId: number) {
   const keyword = await prisma.keyword.findUnique({
     where: {
       id: keywordId,
@@ -27,4 +30,4 @@ async function toggleKeywordActive(_: User, keywordId: number) {
   });
 }
 
-export default withUserAuth(toggleKeywordActive);
+export default toggleKeywordActive;

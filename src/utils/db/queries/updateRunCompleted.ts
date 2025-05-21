@@ -1,12 +1,15 @@
 'use server';
 
-import type { User } from '@supabase/supabase-js';
-
 import prisma from '@/lib/prisma';
+import { createClient } from '@/utils/supabase/server';
 
-import withUserAuth from './withUserAuth';
+async function updateRunCompleted(runId: bigint, count?: number) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
 
-async function updateRunCompleted(_: User, runId: bigint, count?: number) {
   const run = await prisma.scrapperRun.update({
     where: { id: runId },
     data: { finished_at: new Date(), upserted_articles: count },
@@ -14,4 +17,4 @@ async function updateRunCompleted(_: User, runId: bigint, count?: number) {
   return run;
 }
 
-export default withUserAuth(updateRunCompleted);
+export default updateRunCompleted;

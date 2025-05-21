@@ -1,6 +1,7 @@
 import { Article } from '@prisma/client';
 
 import prisma from '@/lib/prisma';
+import { createClient } from '@/utils/supabase/server';
 
 export type UpsertArticleDTO = Omit<Article, 'id' | 'created_at'>;
 
@@ -13,6 +14,12 @@ function omitKeywordIds<T extends { keywordIds?: unknown }>(obj: T) {
 export default async function upsertArticles(
   articles: (UpsertArticleDTO & { keywordIds: number[] })[],
 ) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
   const existingArticles = await prisma.article.findMany({
     where: {
       slug: { in: articles.map((article) => article.slug) },

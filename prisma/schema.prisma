@@ -39,12 +39,11 @@ model Keyword {
   slug            String           @unique(map: "keywords_slug_key")
   description     String?
   is_active       Boolean          @default(true)
-  articleKeywords ArticleKeyword[]
-  SourceKeyword   SourceKeyword[]
-
   parentKeywordId BigInt?
-  parentKeyword   Keyword?  @relation("RelatedKeywords", fields: [parentKeywordId], references: [id])
-  relatedKeywords Keyword[] @relation("RelatedKeywords")
+  articleKeywords ArticleKeyword[]
+  parentKeyword   Keyword?         @relation("RelatedKeywords", fields: [parentKeywordId], references: [id])
+  relatedKeywords Keyword[]        @relation("RelatedKeywords")
+  SourceKeyword   SourceKeyword[]
 }
 
 model ArticleKeyword {

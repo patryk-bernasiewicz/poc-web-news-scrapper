@@ -1,16 +1,19 @@
 'use server';
 
-import type { User } from '@supabase/supabase-js';
-
 import prisma from '@/lib/prisma';
+import { createClient } from '@/utils/supabase/server';
 
-import withUserAuth from './withUserAuth';
+async function setRunError(runId: bigint) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
 
-async function setRunError(_: User, runId: bigint) {
   await prisma.scrapperRun.update({
     where: { id: runId },
     data: { errored_at: new Date() },
   });
 }
 
-export default withUserAuth(setRunError);
+export default setRunError;

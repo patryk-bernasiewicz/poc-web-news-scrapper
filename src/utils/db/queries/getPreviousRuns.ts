@@ -1,21 +1,25 @@
 'use server';
 
 import { ScrapperRun } from '@prisma/client';
-import type { User } from '@supabase/supabase-js';
 
 import prisma from '@/lib/prisma';
-
-import withUserAuth from './withUserAuth';
+import { createClient } from '@/utils/supabase/server';
 
 type GetPreviousRunsParams = {
   limit?: number;
   offset?: number;
 };
 
-async function getPreviousRuns(
-  _: User,
-  { limit = 10, offset = 0 }: GetPreviousRunsParams = {},
-): Promise<ScrapperRun[]> {
+async function getPreviousRuns({
+  limit = 10,
+  offset = 0,
+}: GetPreviousRunsParams = {}): Promise<ScrapperRun[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
+
   return prisma.scrapperRun.findMany({
     orderBy: {
       created_at: 'desc',
@@ -25,4 +29,4 @@ async function getPreviousRuns(
   });
 }
 
-export default withUserAuth(getPreviousRuns);
+export default getPreviousRuns;

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  web:
+    image: ghcr.io/patryk-bernasiewicz/poc-web-news-scrapper:250520_1942
+    ports:
+      - '3300:3300'
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: https://tgnhnesftjxokaxxmosv.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRnbmhuZXNmdGp4b2theHhtb3N2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDYyMDcwMjcsImV4cCI6MjA2MTc4MzAyN30.ST9MFMArsjStMCa-3xwfZtt5-2CTJwB2ETTkI0WIL1I
+      DATABASE_URL: /run/secrets/POC_SCRAPPER_DATABASE_URL
+      DIRECT_URL: /run/secrets/POC_SCRAPPER_DIRECT_URL
+    secrets:
+      - POC_SCRAPPER_DATABASE_URL
+      - POC_SCRAPPER_DIRECT_URL
+    restart: unless-stopped
+
+secrets:
+  POC_SCRAPPER_DATABASE_URL:
+    external: true
+  POC_SCRAPPER_DIRECT_URL:
+    external: true

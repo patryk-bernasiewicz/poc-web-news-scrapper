@@ -124,7 +124,6 @@ export async function scrapSource(
       // Try dd.MM.yyyy format first
       if (/^\d{2}\.\d{2}\.\d{4}$/.test(dateText)) {
         parsedDate = parse(dateText, 'dd.MM.yyyy', new Date());
-        // TODO: reinstall date-fns
       } else {
         const genericParsed = new Date(dateText);
         if (!isNaN(genericParsed.getTime())) {

@@ -1,13 +1,17 @@
 'use server';
 
 import { ScrapperRun } from '@prisma/client';
-import type { User } from '@supabase/supabase-js';
 
 import prisma from '@/lib/prisma';
+import { createClient } from '@/utils/supabase/server';
 
-import withUserAuth from './withUserAuth';
+async function getCurrentRun(): Promise<ScrapperRun | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error('Unauthorized');
 
-async function getCurrentRun(_: User): Promise<ScrapperRun | null> {
   const tenMinutesAgo = new Date(Date.now() - 1 * 60 * 1000); // fix 1 to 10 to actually be 10 minutes
   const run = await prisma.scrapperRun.findFirst({
     where: {
@@ -20,4 +24,4 @@ async function getCurrentRun(_: User): Promise<ScrapperRun | null> {
   return run;
 }
 
-export default withUserAuth(getCurrentRun);
+export default getCurrentRun;
